@@ -8,9 +8,14 @@ import {
   ScrollView,
   ImageBackground,
 } from "react-native";
+
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import * as DocumentPicker from "expo-document-picker";
+
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from "../firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 export default function Register() {
   const router = useRouter();
@@ -22,11 +27,14 @@ export default function Register() {
     password: "",
     company: "",
     nominee: "",
+    nomineeRelation: "",
+    nomineeEmail: "",
     aadhaar: "",
   });
 
   const [companyId, setCompanyId] = useState<any>(null);
   const [payslip, setPayslip] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (field: string, value: string) => {
     setForm({ ...form, [field]: value });
@@ -51,28 +59,75 @@ export default function Register() {
     }
   };
 
-  const handleRegister = () => {
-    const { name, phone, email, password, company, nominee, aadhaar } = form;
+  const handleRegister = async () => {
+    const {
+      name,
+      phone,
+      email,
+      password,
+      company,
+      nominee,
+      nomineeRelation,
+      nomineeEmail,
+      aadhaar,
+    } = form;
 
-    if (!name || !phone || !email || !password || !company || !nominee || !aadhaar) {
-      Alert.alert("Error", "Please fill all fields");
+    if (!name || !phone || !email || !password || !aadhaar) {
+      Alert.alert("Error", "Please fill all required fields");
       return;
     }
-
+    
     if (!companyId || !payslip) {
       Alert.alert("Error", "Please upload Company ID and Payslip");
       return;
     }
 
-    console.log("REGISTER DATA:", {
-      ...form,
-      companyId,
-      payslip,
-    });
+    // Better email validation
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      Alert.alert("Error", "Invalid email");
+      return;
+    }
 
-    Alert.alert("Success", "Registered Successfully ");
+    // Aadhaar validation
+    if (aadhaar.length !== 12) {
+      Alert.alert("Error", "Aadhaar must be 12 digits");
+      return;
+    }
 
-    router.replace("/login");
+    setLoading(true);
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email.trim(),
+        password
+      );
+
+      const user = userCredential.user;
+
+      await setDoc(doc(db, "users", user.uid), {
+        name,
+        phone,
+        email: email.trim(),
+        nominee,
+        nomineeRelation,
+        nomineeEmail,
+        company,
+        aadhaar,
+        companyIdName: companyId?.name || "",
+        payslipName: payslip?.name || "",
+        createdAt: serverTimestamp(),
+      });
+
+      Alert.alert("Success", "Registered Successfully");
+
+      router.replace("/login");
+    } catch (error: any) {
+      console.log(error);
+      Alert.alert("Error", error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -83,13 +138,13 @@ export default function Register() {
     >
       <View style={styles.overlay}>
         <ScrollView contentContainerStyle={styles.container}>
-
+          
           {/* BACK */}
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.back}>⬅</Text>
           </TouchableOpacity>
 
-          <Text style={styles.title}>Register </Text>
+          <Text style={styles.title}>Register</Text>
 
           {/* INPUTS */}
           <TextInput
@@ -128,6 +183,7 @@ export default function Register() {
             style={styles.input}
             onChangeText={(text) => handleChange("company", text)}
           />
+
           <TextInput
             placeholder="Aadhaar Number"
             placeholderTextColor="#aaa"
@@ -135,24 +191,28 @@ export default function Register() {
             keyboardType="numeric"
             onChangeText={(text) => handleChange("aadhaar", text)}
           />
+
           <TextInput
             placeholder="Nominee Name"
             placeholderTextColor="#aaa"
             style={styles.input}
             onChangeText={(text) => handleChange("nominee", text)}
           />
+
           <TextInput
-            placeholder="Nominee relation"
+            placeholder="Nominee Relation"
             placeholderTextColor="#aaa"
             style={styles.input}
-            onChangeText={(text) => handleChange("nominee", text)}
+            onChangeText={(text) => handleChange("nomineeRelation", text)}
           />
+
           <TextInput
-            placeholder="Nominee's Email"
+            placeholder="Nominee Email"
             placeholderTextColor="#aaa"
             style={styles.input}
-            onChangeText={(text) => handleChange("email", text)}
+            onChangeText={(text) => handleChange("nomineeEmail", text)}
           />
+
           {/* COMPANY ID */}
           <TouchableOpacity
             style={styles.uploadButton}
@@ -178,8 +238,14 @@ export default function Register() {
           )}
 
           {/* SUBMIT */}
-          <TouchableOpacity style={styles.button} onPress={handleRegister}>
-            <Text style={styles.buttonText}>Submit</Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleRegister}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? "Registering..." : "Submit"}
+            </Text>
           </TouchableOpacity>
 
         </ScrollView>

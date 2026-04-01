@@ -6,7 +6,7 @@ export default function Home() {
 
   return (
     <ImageBackground
-      source={require("../assets/images/bg1.jpg")}
+      
       style={styles.container}
       resizeMode="cover"
     >
