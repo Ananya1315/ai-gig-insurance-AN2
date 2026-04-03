@@ -116,6 +116,8 @@ export default function Register() {
         aadhaar,
         companyIdName: companyId?.name || "",
         payslipName: payslip?.name || "",
+         policyActive: false,
+         totalPaid: 0,
         createdAt: serverTimestamp(),
       });
 

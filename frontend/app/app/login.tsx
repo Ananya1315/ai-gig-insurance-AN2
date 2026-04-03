@@ -12,7 +12,8 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function Login() {
   const router = useRouter();
@@ -22,35 +23,34 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Please enter email and password");
-      return;
-    }
+  try {
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
 
-    setLoading(true);
+    const user = userCredential.user;
+    const userDoc = await getDoc(doc(db, "users", user.uid));
 
-    try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+    if (userDoc.exists()) {
+      const data = userDoc.data();
 
-      Alert.alert("Success", "Login successful");
-
-      // later we will redirect to dashboard
-      router.replace("/policy");
-
-    } catch (error: any) {
-      console.log(error);
-
-      if (error.code === "auth/user-not-found") {
-        Alert.alert("Error", "User not found");
-      } else if (error.code === "auth/wrong-password") {
-        Alert.alert("Error", "Incorrect password");
+     
+      if (data.policyActive) {
+        router.replace("/home");
       } else {
-        Alert.alert("Error", error.message);
+        router.replace("/policy");
       }
-    } finally {
-      setLoading(false);
+    } else {
+      Alert.alert("Error", "User data not found");
     }
-  };
+
+  } catch (error: any) {
+    console.log(error);
+    Alert.alert("Error", error.message);
+  }
+};
 
   return (
     <ImageBackground
