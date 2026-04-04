@@ -54,7 +54,7 @@ export default function Login() {
 
   return (
     <ImageBackground
-      source={require("../assets/images/bg1.jpg")}
+      // source={require("../assets/images/bg1.jpg")}
       style={{ flex: 1 }}
       resizeMode="cover"
     >

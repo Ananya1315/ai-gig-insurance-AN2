@@ -41,7 +41,7 @@ export default function Policy() {
 
   return (
     <ImageBackground
-      source={require("../assets/images/bg1.jpg")}
+      // source={require("../assets/images/bg1.jpg")}
       style={{ flex: 1 }}
       resizeMode="cover"
     >
@@ -62,9 +62,9 @@ export default function Policy() {
           {/* PRICING */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Pricing</Text>
-            <Text style={styles.price}>₹49 / week</Text>
-            <Text style={styles.subText}>Registration Fee: ₹200</Text>
-            <Text style={styles.subText}>Reactivation Fee: ₹250</Text>
+            <Text style={styles.price}>₹15-50 / week</Text>
+            <Text style={styles.subText}>Registration Fee: ₹50</Text>
+            <Text style={styles.subText}>Reactivation Fee: ₹75</Text>
           </View>
 
           {/* RULES */}
@@ -72,7 +72,7 @@ export default function Policy() {
             <Text style={styles.cardTitle}>Policy Rules & Constraints</Text>
             <Text style={styles.point}>• Weekly premium required</Text>
             <Text style={styles.point}>• No payment for 2 weeks → deactivated</Text>
-            <Text style={styles.point}>• Reactivation requires ₹250 fee</Text>
+            <Text style={styles.point}>• Reactivation requires ₹75 fee</Text>
           </View>
 
           {/* TRIGGERS */}

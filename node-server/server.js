@@ -1,12 +1,16 @@
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
+const multer = require("multer");
+const FormData = require("form-data");
+const fs = require("fs");
+
+const upload = multer({ dest: "uploads/" });
 
 const app = express();
 let adminSettings = {
   festival: 0,
-  curfew: 0,
-  salary: 0.0
+  curfew: 0
 };
 
 app.use(cors());
@@ -16,7 +20,31 @@ app.post("/admin/update", (req, res) => {
   console.log("Updated Admin:", adminSettings);
   res.json({ success: true });
 });
+app.post("/upload-payslip", upload.single("file"), async (req, res) => {
+  try {
+    console.log("REQ FILE:", req.file); // 🔥 ADD THIS
 
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const formData = new FormData();
+
+    formData.append("file", fs.createReadStream(req.file.path));
+
+    const response = await axios.post(
+      "http://127.0.0.1:5000/extract-salary",
+      formData,
+      { headers: formData.getHeaders() }
+    );
+
+    res.json(response.data);
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "OCR failed" });
+  }
+});
 app.post("/predict", async (req, res) => {
   try {
     const features = req.body;
@@ -24,7 +52,7 @@ app.post("/predict", async (req, res) => {
     // Inject admin values
     features.festival = adminSettings.festival;
     features.curfew = adminSettings.curfew;
-    features.salary = adminSettings.salary
+    //features.salary = adminSettings.salary
     const response = await axios.post(
       "http://127.0.0.1:5000/predict",
       features
@@ -36,11 +64,11 @@ app.post("/predict", async (req, res) => {
     let premium = 0;
 
     if (riskScore <= 0.4) {
-      premium = 100;
+      premium = 15;
     } else if (riskScore <= 0.8) {
-      premium = 400;
+      premium = 35;
     } else {
-      premium = 700;
+      premium = 50;
     }
 console.log("premium :",premium)
 res.json({ premium });

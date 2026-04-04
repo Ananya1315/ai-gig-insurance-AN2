@@ -30,6 +30,7 @@ export default function Register() {
     nomineeRelation: "",
     nomineeEmail: "",
     aadhaar: "",
+    location:"",
   });
 
   const [companyId, setCompanyId] = useState<any>(null);
@@ -70,17 +71,18 @@ export default function Register() {
       nomineeRelation,
       nomineeEmail,
       aadhaar,
+      location,
     } = form;
 
-    if (!name || !phone || !email || !password || !aadhaar) {
+    if (!name || !phone || !email || !password || !location) {
       Alert.alert("Error", "Please fill all required fields");
       return;
     }
     
-    if (!companyId || !payslip) {
-      Alert.alert("Error", "Please upload Company ID and Payslip");
-      return;
-    }
+    // if (!companyId || !payslip) {
+    //   Alert.alert("Error", "Please upload Company ID and Payslip");
+    //   return;
+    // }
 
     // Better email validation
     if (!/\S+@\S+\.\S+/.test(email)) {
@@ -89,10 +91,10 @@ export default function Register() {
     }
 
     // Aadhaar validation
-    if (aadhaar.length !== 12) {
-      Alert.alert("Error", "Aadhaar must be 12 digits");
-      return;
-    }
+    // if (aadhaar.length !== 12) {
+    //   Alert.alert("Error", "Aadhaar must be 12 digits");
+    //   return;
+    // }
 
     setLoading(true);
 
@@ -109,16 +111,17 @@ export default function Register() {
         name,
         phone,
         email: email.trim(),
-        nominee,
-        nomineeRelation,
-        nomineeEmail,
+        //nominee,
+        //nomineeRelation,
+        //nomineeEmail,
         company,
-        aadhaar,
-        companyIdName: companyId?.name || "",
-        payslipName: payslip?.name || "",
+        //aadhaar,
+        //companyIdName: companyId?.name || "",
+        //payslipName: payslip?.name || "",
          policyActive: false,
          totalPaid: 0,
         createdAt: serverTimestamp(),
+        location,
       });
 
       Alert.alert("Success", "Registered Successfully");
@@ -134,7 +137,7 @@ export default function Register() {
 
   return (
     <ImageBackground
-      source={require("../assets/images/bg1.jpg")}
+      //source={require("../assets/images/bg1.jpg")}
       style={{ flex: 1 }}
       resizeMode="cover"
     >
@@ -186,35 +189,39 @@ export default function Register() {
             onChangeText={(text) => handleChange("company", text)}
           />
 
-          <TextInput
+          {/* <TextInput
             placeholder="Aadhaar Number"
             placeholderTextColor="#aaa"
             style={styles.input}
             keyboardType="numeric"
             onChangeText={(text) => handleChange("aadhaar", text)}
-          />
+          /> */}
 
-          <TextInput
+          {/* <TextInput
             placeholder="Nominee Name"
             placeholderTextColor="#aaa"
             style={styles.input}
             onChangeText={(text) => handleChange("nominee", text)}
           />
-
+          
           <TextInput
             placeholder="Nominee Relation"
             placeholderTextColor="#aaa"
             style={styles.input}
             onChangeText={(text) => handleChange("nomineeRelation", text)}
           />
-
           <TextInput
             placeholder="Nominee Email"
             placeholderTextColor="#aaa"
             style={styles.input}
             onChangeText={(text) => handleChange("nomineeEmail", text)}
+          /> */}
+          <TextInput
+            placeholder="Location"
+            placeholderTextColor="#aaa"
+            style={styles.input}
+            onChangeText={(text) => handleChange("location", text)}
           />
-
           {/* COMPANY ID */}
           <TouchableOpacity
             style={styles.uploadButton}
@@ -222,12 +229,10 @@ export default function Register() {
           >
             <Text style={styles.buttonText}>Upload Company ID</Text>
           </TouchableOpacity>
-
           {companyId && (
-            <Text style={styles.fileText}>{companyId.name} ✅</Text>
+            <Text style={styles.fileText}>{companyId.name} </Text>
           )}
-
-          {/* PAYSLIP */}
+          {/* PAYSLIP
           <TouchableOpacity
             style={styles.uploadButton}
             onPress={() => pickDocument("payslip")}
@@ -237,7 +242,7 @@ export default function Register() {
 
           {payslip && (
             <Text style={styles.fileText}>{payslip.name} ✅</Text>
-          )}
+          )} */}
 
           {/* SUBMIT */}
           <TouchableOpacity

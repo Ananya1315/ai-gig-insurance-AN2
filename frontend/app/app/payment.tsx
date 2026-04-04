@@ -15,8 +15,10 @@ import { doc, setDoc, getDoc } from "firebase/firestore";
 export default function Payments() {
   const router = useRouter();
   const params = useLocalSearchParams();
-
+  const salary = Number(params.salary);
+  console.log("salary",salary);
   const type = params.type as string;
+  
 
   const [premium, setPremium] = useState<number | null>(null);
   const [loadingPremium, setLoadingPremium] = useState(false);
@@ -33,22 +35,29 @@ export default function Payments() {
 
   // 🔥 FETCH USER DATA
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const user = auth.currentUser;
-        if (!user) return;
+  const fetchUser = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
 
-        const docSnap = await getDoc(doc(db, "users", user.uid));
-        if (docSnap.exists()) {
-          setUserData(docSnap.data());
-        }
-      } catch (error) {
-        console.log(error);
+      const docSnap = await getDoc(doc(db, "users", user.uid));
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const location = data.location;
+
+        console.log("User Location:", location);
+
+        setUserData(data);
       }
-    };
 
-    fetchUser();
-  }, []);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  fetchUser();
+}, []);
 
   const API_KEY = "37f63416af21b6fc12124708ac26df4c";
 
@@ -69,9 +78,9 @@ export default function Payments() {
     try {
       setLoadingPremium(true);
 
-      // 🌦 Step 1: Get weather
+      const city = userData?.location || "Chennai";
       const weatherRes = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=Chennai&appid=${API_KEY}&units=metric`
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
       );
       const weatherData = await weatherRes.json();
 
@@ -93,7 +102,8 @@ export default function Payments() {
       const normTemp = normalize(temp, tempMin, tempMax);
       const normRain = normalize(rain, 0, rainMax);
       const normAqi = normalize(aqiValue, aqiMin, aqiMax);
-
+      const normsalary=normalize(salary,7000,12000);
+      console.log("normalised salary",normsalary);
       // ⚙️ Step 4: Get admin settings
       const adminRes = await fetch("http://192.168.137.1:3000/admin");
       const admin = await adminRes.json();
@@ -105,7 +115,7 @@ export default function Payments() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          salary: admin.salary,
+          salary: normsalary,
           rain: normRain,
           temp: normTemp,
           aqi: normAqi,
@@ -130,15 +140,15 @@ export default function Payments() {
 
 
   useEffect(() => {
-    if (type === "weekly") {
-      fetchPremium();
-    }
-  }, []);
+  if (type === "weekly" && userData) {
+    fetchPremium();
+  }
+}, [userData]);
 
   // 🔥 GET AMOUNT
   const getAmount = () => {
-    if (type === "activation") return 200;
-    if (type === "reactivation") return 250;
+    if (type === "activation") return 50;
+    if (type === "reactivation") return 75;
     if (type === "weekly") return premium || 49;
     return 0;
   };
