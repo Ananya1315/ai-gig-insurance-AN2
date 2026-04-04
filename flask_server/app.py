@@ -16,14 +16,20 @@ def predict():
     try:
         data = request.json
 
-        df = pd.DataFrame([data])
-
+        df = pd.DataFrame([{
+            "rain": data["rain"],
+            "temp": data["temp"],
+            "aqi": data["aqi"],
+            "festival": data["festival"],
+            "curfew": data["curfew"],
+            "salary": data["salary"]
+        }])
         prediction = model.predict(df)[0]
 
         # classify
-        if prediction < 0.3:
+        if prediction <= 0.4:
             level = "Low"
-        elif prediction < 0.7:
+        elif prediction <=0.8:
             level = "Medium"
         else:
             level = "High"

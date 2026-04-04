@@ -21,16 +21,104 @@ export default function Payments() {
   const [premium, setPremium] = useState<number | null>(null);
   const [loadingPremium, setLoadingPremium] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
 
-  // 🔥 FETCH AI PREMIUM (ONLY FOR WEEKLY)
+  // 🔥 LOAD RAZORPAY SCRIPT (WEB ONLY)
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
+
+  // 🔥 FETCH USER DATA
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const docSnap = await getDoc(doc(db, "users", user.uid));
+        if (docSnap.exists()) {
+          setUserData(docSnap.data());
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  const API_KEY = "37f63416af21b6fc12124708ac26df4c";
+
+  const tempMin = -93;
+  const tempMax = 57;
+  const rainMax = 200;
+  const aqiMin = 1;
+  const aqiMax = 5;
+
+  const normalize = (value, min, max) => {
+    let norm = (value - min) / (max - min);
+    if (norm < 0) norm = 0;
+    if (norm > 1) norm = 1;
+    return norm;
+  };
+
   const fetchPremium = async () => {
     try {
       setLoadingPremium(true);
 
-      const response = await fetch("http://172.20.10.4/getPremium");
-      const data = await response.json();
+      // 🌦 Step 1: Get weather
+      const weatherRes = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=Chennai&appid=${API_KEY}&units=metric`
+      );
+      const weatherData = await weatherRes.json();
 
-      setPremium(data.premium);
+      const temp = weatherData.main.temp;
+      const rain = weatherData.rain ? weatherData.rain["1h"] || 0 : 0;
+
+      const lat = weatherData.coord.lat;
+      const lon = weatherData.coord.lon;
+
+      // 🌫 Step 2: Get AQI
+      const aqiRes = await fetch(
+        `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`
+      );
+      const aqiData = await aqiRes.json();
+
+      const aqiValue = aqiData.list[0].main.aqi;
+
+      // 📊 Step 3: Normalize
+      const normTemp = normalize(temp, tempMin, tempMax);
+      const normRain = normalize(rain, 0, rainMax);
+      const normAqi = normalize(aqiValue, aqiMin, aqiMax);
+
+      // ⚙️ Step 4: Get admin settings
+      const adminRes = await fetch("http://192.168.137.1:3000/admin");
+      const admin = await adminRes.json();
+      console.log(admin);
+      // 🤖 Step 5: Call prediction API
+      const predRes = await fetch("http://192.168.137.1:3000/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          salary: admin.salary,
+          rain: normRain,
+          temp: normTemp,
+          aqi: normAqi,
+          festival: admin.festival,
+          curfew: admin.curfew,
+        }),
+      });
+
+      const predData = await predRes.json();
+
+      console.log("Final Premium:", predData);
+
+      setPremium(predData.premium);
 
     } catch (error) {
       console.log("Premium error:", error);
@@ -39,6 +127,7 @@ export default function Payments() {
       setLoadingPremium(false);
     }
   };
+
 
   useEffect(() => {
     if (type === "weekly") {
@@ -54,40 +143,60 @@ export default function Payments() {
     return 0;
   };
 
-  // 🔥 HANDLE PAYMENT
+  // 🔥 HANDLE PAYMENT (WEB RAZORPAY)
   const handlePayment = async () => {
     try {
       setProcessing(true);
 
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const docRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(docRef);
-
-      let prevPaid = 0;
-      if (docSnap.exists()) {
-        prevPaid = docSnap.data().totalPaid || 0;
-      }
-
       const amount = getAmount();
 
-      const updateData: any = {
-        totalPaid: prevPaid + amount,
-        lastPaymentDate: new Date(),
+      const options = {
+        key: "rzp_test_SZJnbRg4jIPCmT", 
+        amount: amount * 100,
+        currency: "INR",
+        name: "Gig Insurance",
+        description: "Payment",
+        handler: async function () {
+          const user = auth.currentUser;
+          if (!user) return;
+
+          const docRef = doc(db, "users", user.uid);
+          const docSnap = await getDoc(docRef);
+
+          let prevPaid = 0;
+          if (docSnap.exists()) {
+            prevPaid = docSnap.data().totalPaid || 0;
+          }
+
+          const updateData: any = {
+            totalPaid: prevPaid + amount,
+            lastPaymentDate: new Date(),
+          };
+
+          if (type === "activation" || type === "reactivation") {
+            updateData.policyActive = true;
+          }
+
+          await setDoc(docRef, updateData, { merge: true });
+
+          Alert.alert("Success", "Payment Successful 🎉");
+
+          router.replace("/home");
+        },
+        prefill: {
+          email: auth.currentUser?.email || "",
+          contact: userData?.phone || "",
+          name: userData?.name || "",
+        },
+        theme: {
+          color: "#ff5a5f",
+        },
       };
 
-      if (type === "activation" || type === "reactivation") {
-        updateData.policyActive = true;
-      }
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
 
-      await setDoc(docRef, updateData, { merge: true });
-
-      Alert.alert("Success", "Payment Successful");
-
-      router.replace("/home");
-
-    } catch (error: any) {
+    } catch (error) {
       console.log(error);
       Alert.alert("Error", "Payment failed");
     } finally {
@@ -113,12 +222,10 @@ export default function Payments() {
         </Text>
       </View>
 
-      {/* 🔥 LOADING STATE */}
       {loadingPremium && type === "weekly" && (
         <ActivityIndicator size="large" color="#fff" />
       )}
 
-      {/* 🔥 PAY BUTTON */}
       <TouchableOpacity
         style={styles.button}
         onPress={handlePayment}
@@ -177,4 +284,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-})
+});

@@ -6,30 +6,21 @@ const app = express();
 let adminSettings = {
   festival: 0,
   curfew: 0,
-  salary: 0
+  salary: 0.0
 };
 
 app.use(cors());
 app.use(express.json());
 app.post("/admin/update", (req, res) => {
-  const { festival, curfew, salary} = req.body;
-
-  // store values
-  adminSettings.festival = Number(festival);
-  adminSettings.curfew = Number(curfew);
-  adminSettings.salary = Number(salary); 
-  console.log("Admin updated:", adminSettings);
-
-  res.json({
-    message: "Updated successfully",
-    adminSettings
-  });
+  adminSettings = req.body;
+  console.log("Updated Admin:", adminSettings);
+  res.json({ success: true });
 });
 
 app.post("/predict", async (req, res) => {
   try {
     const features = req.body;
-
+    console.log("Features:",features)
     // Inject admin values
     features.festival = adminSettings.festival;
     features.curfew = adminSettings.curfew;
@@ -38,13 +29,13 @@ app.post("/predict", async (req, res) => {
       "http://127.0.0.1:5000/predict",
       features
     );
-
+    console.log("response:",response.data);
     
     const riskScore = response.data.risk_score;
-    console.log(riskScore);
+    console.log("Risk score:",riskScore);
     let premium = 0;
 
-    if (riskScore <= 0.3) {
+    if (riskScore <= 0.4) {
       premium = 100;
     } else if (riskScore <= 0.8) {
       premium = 400;
@@ -62,24 +53,6 @@ app.get("/admin", (req, res) => {
   res.json(adminSettings);
 });
 
-app.listen(3000, "0.0.0.0", () => {
-  console.log("Server running on port 3000");
-});
-app.get("/getPremium", async (req, res) => {
-  try {
-    const response = await axios.post(
-      "http://127.0.0.1:5000/predict",
-      {
-        hours: 8,
-        distance: 20,
-        risk: 2,
-      }
-    );
-
-    res.json({ premium: response.data.premium });
-
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Failed" });
-  }
+app.listen(3000, () => {
+  console.log("Node server running on port 3000");
 });

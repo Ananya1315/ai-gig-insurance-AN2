@@ -15,7 +15,7 @@
 <input type="number" id="curfew"><br><br>
 
 <label>Weekly Earnings (₹):</label><br>
-<input type="number" id="salary" placeholder="Enter amount" min="0"><br><br>
+<input type="number" id="salary" placeholder="Enter amount" min="0" step="any"><br><br>
 
 <button onclick="updateSettings()">Update</button>
 
@@ -24,7 +24,7 @@ async function updateSettings() {
   const festival = document.getElementById("festival").value;
   const curfew = document.getElementById("curfew").value;
   const salary = document.getElementById("salary").value;
-  const res = await fetch("http://localhost:3000/admin/update", {
+  const res = await fetch("http://192.168.137.1:3000/admin/update", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
