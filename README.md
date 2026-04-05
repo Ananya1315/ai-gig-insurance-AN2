@@ -95,9 +95,9 @@ Based on these, AI assigns a **Risk Score**:
 
 | Risk Zone   | Premium (₹) | Payout (₹) |
 | ----------- | ----------- | ---------- |
-| Low Risk    | 100         | 300        |
-| Medium Risk | 400         | 900        |
-| High Risk   | 700         | 1500       |
+| Low Risk    | 15          | 45         |
+| Medium Risk | 35          | 79         |
+| High Risk   | 50          | 108        |
 
 ---
 
@@ -126,12 +126,12 @@ Trigger only occurs during:
 
 | Condition | Premium | Payout |
 | --------- | ------- | ------ |
-| Low Rain  | 100     | 150    |
-| High Rain | 100     | 300    |
-| AQI       | 100     | 210    |
-| Heat      | 100     | 210    |
-| Curfew    | 100     | 300    |
-| Festival  | 70      | 150    |
+| Low Rain  | 15      | 23     |
+| High Rain | 15      | 45     |
+| AQI       | 15      | 32     |
+| Heat      | 15      | 32     |
+| Curfew    | 15      | 45     |
+| Festival  | 11      | 23     |
 
 ---
 
@@ -139,12 +139,12 @@ Trigger only occurs during:
 
 | Condition | Premium | Payout |
 | --------- | ------- | ------ |
-| Low Rain  | 400     | 450    |
-| High Rain | 400     | 900    |
-| AQI       | 400     | 630    |
-| Heat      | 400     | 630    |
-| Curfew    | 400     | 900    |
-| Festival  | 280     | 450    |
+| Low Rain  | 35      | 40     |
+| High Rain | 35      | 79     |
+| AQI       | 35      | 56     |
+| Heat      | 35      | 56     |
+| Curfew    | 35      | 79     |
+| Festival  | 25      | 41     |
 
 ---
 
@@ -152,12 +152,12 @@ Trigger only occurs during:
 
 | Condition | Premium | Payout |
 | --------- | ------- | ------ |
-| Low Rain  | 700     | 750    |
-| High Rain | 700     | 1500   |
-| AQI       | 700     | 1050   |
-| Heat      | 700     | 1050   |
-| Curfew    | 700     | 1500   |
-| Festival  | 490     | 750    |
+| Low Rain  | 50      | 54     |
+| High Rain | 50      | 108    |
+| AQI       | 50      | 75     |
+| Heat      | 50      | 75     |
+| Curfew    | 50      | 108    |
+| Festival  | 35      | 54     |
 
 ---
 
