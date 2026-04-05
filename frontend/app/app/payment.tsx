@@ -104,11 +104,11 @@ export default function Payments() {
       const normsalary=normalize(salary,7000,12000);
       console.log("normalised salary",normsalary);
       // ⚙️ Step 4: Get admin settings
-      const adminRes = await fetch("http://192.168.137.1:3000/admin");
+      const adminRes = await fetch("https://gig-backend-zxt5.onrender.com/admin");
       const admin = await adminRes.json();
       console.log(admin);
       // 🤖 Step 5: Call prediction API
-      const predRes = await fetch("http://192.168.137.1:3000/predict", {
+      const predRes = await fetch("https://gig-backend-zxt5.onrender.com/predict", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
